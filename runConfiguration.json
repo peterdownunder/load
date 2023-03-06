@@ -80,6 +80,28 @@
             }
         },
         {
+            "hostname": "default",
+            "connectionString": "mongodb://10.61.14.85:27017",
+            "mongodb": "loadtest",
+            "tenantId": "4411a4ce-4a7b-46ca-ab39-853640aedba7",
+            "teamsAdapterUrl": "http://pb-loadserver.nz.rd.eilab.biz:5000",
+            "callbackUrl": "http://nz-petbonha.edge.local:8879",
+            "freeswitchEslIp": "10.213.6.134",
+            "freeswitchEslPassword": "~3ngH0u#e!",
+            "usePlugin": "CCSystem",
+            "numberToDial": "84090",
+            "subscriptionId": "c127c802-B71c-48c1-a88c-26c805B37add",
+            "teamAudioCallbackUrl": "http://retepmahnob.duckdns.org:8879/audio/",
+            "mohFile": "",
+            "logToConsole": true,
+            "logRoot": "/var/log",
+            "ccSystem": {
+                "clientWebUrl": "https://nz-load-cc.nz.rd.eilab.biz:4242",
+                "userName": "blair keeley",
+                "password": "Sysadm1n"
+            }
+        },
+        {
             "hostname": "pb-loadserver",
             "connectionString": "mongodb://logger:logger@127.0.0.1:27017",
             "mongodb": "loadtest",
