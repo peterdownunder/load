@@ -113,7 +113,9 @@ const systemConfigController = new system_config_controller_1.default(logger);
 app.use(systemConfigController.Routes);
 const callMaker = callMaker_1.CallMaker.getInstance();
 callMaker.logger = logger;
-callMaker.connectToFreeswitch(runConfig);
+setTimeout(() => {
+    callMaker.connectToFreeswitch(runConfig);
+}, 10000);
 const fsapi = new freeswitch_api_controller_1.freeswitchApiController(logger);
 app.use(fsapi.Routes);
 if (pluginType === types_1.PluginType.PassThru) {
