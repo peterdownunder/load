@@ -94,7 +94,7 @@
             "teamAudioCallbackUrl": "http://retepmahnob.duckdns.org:8879/audio/",
             "mohFile": "",
             "logToConsole": true,
-            "logRoot": "/var/log",
+            "logRoot": "/var/log/",
             "ccSystem": {
                 "clientWebUrl": "https://nz-load-cc.nz.rd.eilab.biz:4242",
                 "userName": "blair keeley",
