@@ -86,7 +86,7 @@
             "tenantId": "4411a4ce-4a7b-46ca-ab39-853640aedba7",
             "teamsAdapterUrl": "http://pb-loadserver.nz.rd.eilab.biz:5000",
             "callbackUrl": "http://nz-petbonha.edge.local:8879",
-            "freeswitchEslIp": "freeswitch",
+            "freeswitchEslIp": "10.213.6.136",
             "freeswitchEslPassword": "ClueCon",
             "usePlugin": "CCSystem",
             "numberToDial": "84090",
