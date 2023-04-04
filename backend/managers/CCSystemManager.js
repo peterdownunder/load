@@ -1,23 +1,17 @@
 "use strict";
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.CCSystemManager = void 0;
 const dataLogger_1 = require("../dataLogger");
-const node_fetch_1 = __importDefault(require("node-fetch"));
 const callMaker_1 = require("../callMaker");
 const liveCallNotifier_1 = require("../liveCallNotifier");
-const ccSystemApi_1 = require("../api/ccSystemApi");
 const callCollector_1 = require("../callCollector");
 class CCSystemManager {
-    constructor(config, logger, notifier, serverUrl, dataLogger) {
+    constructor(config, logger, notifier, dataLogger) {
         this.config = config;
         this.logger = logger;
         this.notifier = notifier;
         this.dataLogger = dataLogger;
         this.callLogger = new Array();
-        this.api = new ccSystemApi_1.ccSystemApi('', logger);
         this.notifier.NewCallEvent.subscribe((newCall) => {
             logger.info({ ccSystem: "newCall", newCall });
             this.onNewCall(newCall);
@@ -165,21 +159,23 @@ class CCSystemManager {
     }
 }
 exports.CCSystemManager = CCSystemManager;
-CCSystemManager.CreateAsync = async (config, logger, notifier, server, dataLogger) => {
-    let resp = await node_fetch_1.default(`${server.clientWebUrl}/api/v1/Authentication/credentials`, {
-        method: 'GET',
-        headers: {
-            'Content-Type': 'application/json',
-            'username': server.userName,
-            'password': server.password
-        },
-    });
-    const loginState = await resp.json();
-    CCSystemManager.token = `Bearer ${loginState.token}`;
-    logger.info('ClientLogin', {
-        status: resp.status,
-        token: loginState.token
-    });
-    return new CCSystemManager(config, logger, notifier, server.clientWebUrl, dataLogger);
+CCSystemManager.CreateAsync = async (config, logger, notifier, dataLogger) => {
+    /*
+            let resp = await fetch(`${server.clientWebUrl}/api/v1/Authentication/credentials`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'username': server.userName,
+                    'password': server.password
+                },
+            });
+            const loginState = await resp.json();
+            CCSystemManager.token = `Bearer ${loginState.token}`;
+            logger.info('ClientLogin', {
+                status: resp.status,
+                token: loginState.token
+            });
+    */
+    return new CCSystemManager(config, logger, notifier, dataLogger);
 };
 //# sourceMappingURL=CCSystemManager.js.map

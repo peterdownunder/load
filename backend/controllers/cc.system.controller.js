@@ -185,59 +185,79 @@ const getDeliveryPriority = (deliveryType) => {
 };
 exports.getDeliveryPriority = getDeliveryPriority;
 class CcSystemController {
-    constructor(logger, notifier, config, token) {
+    constructor(logger, notifier, serverSelector) {
         this.logger = logger;
         this.notifier = notifier;
-        this.config = config;
-        this.token = token;
+        this.serverSelector = serverSelector;
         this.queueList = [];
         this.callList = [];
+        this.token = '';
     }
     async initRestApi() {
+        this.serverSelector.subscribe(async (server) => {
+            this.logger.info('serverUpdate', {
+                selection: server,
+                currentToken: this.token,
+                currentServer: this.config
+            });
+            if (server.token && server.token.length > 0) {
+                if (this.config && this.config.clientWebUrl.length > 0 && this.config.clientWebUrl !== server.ccSystem.clientWebUrl) {
+                    await this.closeSession();
+                }
+                await this.initSession(server);
+            }
+            else {
+                await this.closeSession();
+            }
+            this.config = server.ccSystem;
+            this.token = server.token;
+        });
+    }
+    async initSession(server) {
         let queues = {};
         this.logger.info('info', {
             message: 'initRestApi with token',
-            url: this.token,
-            host: this.config.clientWebUrl
+            url: server.token,
+            host: server.ccSystem.clientWebUrl
         });
-        const queueReq = await node_fetch_1.default(`${this.config.clientWebUrl}/api/v1/queues`, {
+        const queueReq = await node_fetch_1.default(`${server.ccSystem.clientWebUrl}/api/v1/queues`, {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json',
-                'Authorization': this.token
+                'Authorization': server.token
             }
         });
         this.queueList = await queueReq.json();
         this.logger.info('info', {
             message: 'get queues list resp',
-            url: `${this.config.clientWebUrl}/api/v1/queues`,
+            url: `${server.ccSystem.clientWebUrl}/api/v1/queues`,
             result: queueReq.status,
             queueList: this.queueList
         });
-        const res = await node_fetch_1.default(`${this.config.clientWebUrl}/api/v1/queues/filters`, {
+        const res = await node_fetch_1.default(`${server.ccSystem.clientWebUrl}/api/v1/queues/filters`, {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json',
-                'Authorization': this.token
+                'Authorization': server.token
             }
         });
         if (res.status === 200) {
             let filters = await res.json();
             this.logger.info('info', {
                 message: 'get queues filters response',
-                url: `${this.config.clientWebUrl}/api/v1/queues/filters`,
+                url: `${server.ccSystem.clientWebUrl}/api/v1/queues/filters`,
                 result: res.status,
                 filters: filters
             });
         }
         const params = new URLSearchParams();
         params.append('changedFilterType', '300');
-        const setfil = `${this.config.clientWebUrl}/api/v1/queues/setActiveFilter?${params}`;
+        const setfil = `${server.ccSystem.clientWebUrl}/api/v1/queues/setActiveFilter?${params}`;
         let y = await node_fetch_1.default(setfil, {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json',
-                'Authorization': this.token
+                'Authorization': server.token
             },
         });
         this.logger.info('info', {
@@ -245,11 +265,11 @@ class CcSystemController {
             url: setfil,
             result: y.status
         });
-        let resp = await node_fetch_1.default(`${this.config.clientWebUrl}/api/v1/queues`, {
+        let resp = await node_fetch_1.default(`${server.ccSystem.clientWebUrl}/api/v1/queues`, {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json',
-                'Authorization': this.token
+                'Authorization': server.token
             },
         });
         this.logger.info('info', {
@@ -261,25 +281,33 @@ class CcSystemController {
             message: 'get queuee',
             q: q
         });
-        await this.initialiseSignalR();
+        await this.initialiseSignalR(server);
         this.registerQueueHubEvents();
         this.registerInteractionHubEvents();
     }
-    async initialiseSignalR() {
+    async closeSession() {
+        this.logger.info('close session');
+        await Promise.all([
+            this.hubQueueUpdate?.stop(),
+            this.hubInteractions?.stop()
+        ]);
+        this.queueList.length = 0;
+    }
+    async initialiseSignalR(server) {
         const queuesMonitor = [];
         this.queueList.map(q => {
             queuesMonitor.push(q.config.id);
         });
-        await this.subscribeForInteractions(queuesMonitor);
+        await this.subscribeForInteractions(server, queuesMonitor);
         this.hubQueueUpdate = new signalr_1.HubConnectionBuilder()
-            .withUrl(`${this.config.clientWebUrl}/queuesHub`, {
-            accessTokenFactory: () => this.token.substr(7)
+            .withUrl(`${server.ccSystem.clientWebUrl}/queuesHub`, {
+            accessTokenFactory: () => server.token.substr(7)
         })
             .configureLogging(signalr_1.LogLevel.Information)
             .build();
         this.hubInteractions = new signalr_1.HubConnectionBuilder()
-            .withUrl(`${this.config.clientWebUrl}/interactionsHub`, {
-            accessTokenFactory: () => this.token.substr(7)
+            .withUrl(`${server.ccSystem.clientWebUrl}/interactionsHub`, {
+            accessTokenFactory: () => server.token.substr(7)
         })
             .configureLogging(signalr_1.LogLevel.Information)
             .build();
@@ -436,13 +464,13 @@ class CcSystemController {
             });
         });
     }
-    async subscribeForInteractions(queueIds) {
+    async subscribeForInteractions(server, queueIds) {
         const request = new QueuedInteractionsRequest(queueIds);
-        let resp = await node_fetch_1.default(`${this.config.clientWebUrl}/api/v1/queues/interactions`, {
+        let resp = await node_fetch_1.default(`${server.ccSystem.clientWebUrl}/api/v1/queues/interactions`, {
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json',
-                'Authorization': this.token
+                'Authorization': server.token
             },
             body: JSON.stringify(request)
         });

@@ -13,110 +13,13 @@
             "numberToDial": "84090"
         }
     ],
-    "environments": [
-        {
-            "hostname": "nz-petboewnha.edge.local",
-            "connectionString": "mongodb://logger:logger@10.61.14.32:27017",
-            "mongodb": "loadtest",
-            "tenantId": "4411a4ce-4a7b-46ca-ab39-853640aedba7",
-            "teamsAdapterUrl": "http://pb-loadserver.nz.rd.eilab.biz:5000",
-            "callbackUrl": "http://nz-petbonha.edge.local:8879",
-            "freeswitchEslIp": "10.61.14.32",
-            "usePlugin": "CCSystem",
-            "numberToDial": "+6497882301",
-            "subscriptionId": "c127c802-B71c-48c1-a88c-26c805B37add",
-            "teamAudioCallbackUrl": "http://retepmahnob.duckdns.org:8879/audio/",
-            "mohFile": "",
-            "logToConsole": true,
-            "logRoot": "C:\\users\\public\\telephony\\teams\\",
-            "ccSystem": {
-                "clientWebUrl": "https://pb-teams-cc.nz.rd.eilab.biz:4242",
-                "userName": "load monitor",
-                "password": "sysadmin"
-            }
-        },
-        {
-            "hostname": "pb-portsip.bz.rd.eilab.biz",
-            "connectionString": "mongodb://admin:password@localhost:27017",
-            "mongodb": "loadtest",
-            "tenantId": "4411a4ce-4a7b-46ca-ab39-853640aedba7",
-            "teamsAdapterUrl": "http://pb-loadserver.nz.rd.eilab.biz:5000",
-            "callbackUrl": "http://nz-petbonha.edge.local:8879",
-            "freeswitchEslIp": "10.213.6.134",
-            "freeswitchEslPassword": "~3ngH0u#e!",
-            "usePlugin": "CCSystem",
-            "numberToDial": "84090",
-            "subscriptionId": "c127c802-B71c-48c1-a88c-26c805B37add",
-            "teamAudioCallbackUrl": "http://retepmahnob.duckdns.org:8879/audio/",
-            "mohFile": "",
-            "logToConsole": true,
-            "logRoot": "C:\\users\\public\\telephony\\teams\\",
-            "ccSystem": {
-                "clientWebUrl": "https://nz-load-cc.nz.rd.eilab.biz:4242",
-                "userName": "blair keeley",
-                "password": "Sysadm1n"
-            }
-        },
-        {
-            "hostname": "nz-petbonha.edge.local",
-            "connectionString": "mongodb://10.61.14.85:27017",
-            "mongodb": "loadtest",
-            "tenantId": "4411a4ce-4a7b-46ca-ab39-853640aedba7",
-            "teamsAdapterUrl": "http://pb-loadserver.nz.rd.eilab.biz:5000",
-            "callbackUrl": "http://nz-petbonha.edge.local:8879",
-            "freeswitchEslIp": "10.213.6.134",
-            "freeswitchEslPassword": "~3ngH0u#e!",
-            "usePlugin": "CCSystem",
-            "numberToDial": "84090",
-            "subscriptionId": "c127c802-B71c-48c1-a88c-26c805B37add",
-            "teamAudioCallbackUrl": "http://retepmahnob.duckdns.org:8879/audio/",
-            "mohFile": "",
-            "logToConsole": true,
-            "logRoot": "C:\\users\\public\\telephony\\teams\\",
-            "ccSystem": {
-                "clientWebUrl": "https://nz-load-cc.nz.rd.eilab.biz:4242",
-                "userName": "blair keeley",
-                "password": "Sysadm1n"
-            }
-        },
-        {
-            "hostname": "default",
-            "connectionString": "mongodb://mongodb:27017",
-            "mongodb": "loadtest",
-            "tenantId": "4411a4ce-4a7b-46ca-ab39-853640aedba7",
-            "teamsAdapterUrl": "http://pb-loadserver.nz.rd.eilab.biz:5000",
-            "callbackUrl": "http://nz-petbonha.edge.local:8879",
-            "freeswitchEslIp": "freeswitch",
-            "freeswitchEslPassword": "ClueCon",
-            "usePlugin": "CCSystem",
-            "numberToDial": "84090",
-            "subscriptionId": "c127c802-B71c-48c1-a88c-26c805B37add",
-            "teamAudioCallbackUrl": "http://retepmahnob.duckdns.org:8879/audio/",
-            "mohFile": "",
-            "logToConsole": true,
-            "logRoot": "/var/log/",
-            "ccSystem": {
-                "clientWebUrl": "https://nz-load-cc.nz.rd.eilab.biz:4242",
-                "userName": "blair keeley",
-                "password": "Sysadm1n"
-            }
-        },
-        {
-            "hostname": "pb-loadserver",
-            "connectionString": "mongodb://logger:logger@127.0.0.1:27017",
-            "mongodb": "loadtest",
-            "tenantId": "4411a4ce-4a7b-46ca-ab39-853640aedba7",
-            "teamsAdapterUrl": "http://localhost:5000",
-            "callbackUrl": "http://localhost:8879",
-            "freeswitchEslIp": "127.0.0.1",
-            "usePlugin": "PassThru",
-            "numberToDial": "82301",
-            "subscriptionId": "c127c802-B71slacc-48c1-a88c-26c805B37add",
-            "teamAudioCallbackUrl": "https://pb-enghouse-teams.ngrok.io/audio/",
-            "mohFile": "",
-            "logToConsole": true,
-            "logRoot": "/var/log/"
-        }
-    ]
+    "environment": {
+        "hostname": "default",
+        "connectionString": "mongodb://10.213.6.136:27017",
+        "mongodb": "loadtest",
+        "freeswitchEslIp": "10.213.6.136",
+        "freeswitchEslPassword": "ClueCon",
+        "logToConsole": true,
+        "logRoot": "/var/log/"
+    }
 }
-

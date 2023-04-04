@@ -4,9 +4,6 @@ exports.DataLogger = exports.ReportRecord = exports.ReportSummary = void 0;
 const mongodb_1 = require("mongodb");
 const RunConfig_1 = require("./RunConfig");
 class CallInfo {
-    constructor() {
-        this.errors = [];
-    }
 }
 class ReportSummary {
 }

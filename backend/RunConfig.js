@@ -18,37 +18,18 @@ var __importStar = (this && this.__importStar) || function (mod) {
     __setModuleDefault(result, mod);
     return result;
 };
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.RunConfig = void 0;
 const os = __importStar(require("os"));
 const config = __importStar(require("./runConfiguration.json"));
-/*
-export interface ccParameters {
-    clientWebUrl: string;
-    userName: string;
-    password: string;
-    numberToDial: string;
-}
-
-export interface Config {
-    connectionString: string;
-    mongodb: string;
-    tenantId: string;
-    teamsAdapterUrl: string;
-    callbackUrl: string;
-    freeswitchEslIp: string;
-    freeswitchEslPassword: string;
-    usePlugin: string;
-    numberToDial: string;
-    subscriptionId: string;
-    teamAudioCallbackUrl: string;
-    logToConsole: boolean,
-    logRoot: string;
-    ccSystem: ccParameters;
-}
-*/
+const node_fetch_1 = __importDefault(require("node-fetch"));
+const rxjs_1 = require("rxjs");
 class RunConfig {
     constructor() {
+        this.systemChange = new rxjs_1.Subject();
     }
     get Config() {
         return this._config;
@@ -59,30 +40,54 @@ class RunConfig {
     loadTargetSystems() {
         return config.ccSystems;
     }
+    loadTrunks() {
+        const fs = require('fs');
+        var parser = require('xml2json');
+        fs.readFile('./trunks/data.xml', function (err, data) {
+            var json = parser.toJson(data);
+            console.log("to json ->", json);
+        });
+    }
+    async signOut() {
+        if (!this.si) {
+            return;
+        }
+        let creds = await node_fetch_1.default(`${this.si.ccSystem.clientWebUrl}/api/v1/authentication/signout`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+        });
+        const c = {
+            ccSystem: this.si.ccSystem,
+            token: ''
+        };
+        this.systemChange.next(c);
+        return c;
+    }
+    async setServer(server) {
+        let creds = await node_fetch_1.default(`${server.clientWebUrl}/api/v1/Authentication/credentials`, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'username': server.userName,
+                'password': server.password
+            },
+        });
+        const loginState = await creds.json();
+        const token = `Bearer ${loginState.token}`;
+        const c = {
+            ccSystem: server,
+            token: token
+        };
+        this.systemChange.next(c);
+        return c;
+    }
     loadConfig() {
         const host = os.hostname().toLowerCase();
         console.log(host);
-        let c = config.environments.find(m => m.hostname.startsWith(host));
-        if (c) {
-            // @ts-ignore
-            this._config = c;
-        }
-        c = config.environments.find(m => m.hostname == 'default');
-        if (c) {
-            // @ts-ignore
-            this._config = c;
-        }
+        this._config = config.environment;
         return this._config;
-    }
-    loadConfigs() {
-        const host = os.hostname().toLowerCase();
-        console.log(host);
-        let c = config.environments.find(m => m.hostname.startsWith(host));
-        if (c) {
-            // @ts-ignore
-            this._config = c;
-        }
-        return config.environments;
     }
 }
 exports.RunConfig = RunConfig;

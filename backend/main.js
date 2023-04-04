@@ -24,16 +24,11 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
 const request_logger_middleware_1 = require("./request.logger.middleware");
-const teams_cc_callback_controller_1 = require("./controllers/teams.cc.callback.controller");
 const notifier_1 = require("./notifier");
-const passThruCallManager_1 = require("./managers/passThruCallManager");
 const cors_1 = __importDefault(require("cors"));
 const winston = __importStar(require("winston"));
-const teams_passthru_controller_1 = require("./controllers/teams.passthru.controller");
 const dataLogger_1 = require("./dataLogger");
 const stats_callback_controller_1 = __importDefault(require("./controllers/stats.callback.controller"));
-const types_1 = require("./dto/types");
-const queueCallManager_1 = require("./managers/queueCallManager");
 const socket_io_1 = require("socket.io");
 const http_1 = require("http");
 const liveCallNotifier_1 = require("./liveCallNotifier");
@@ -86,16 +81,6 @@ app.use(function (req, res, next) {
 });
 app.use(request_logger_middleware_1.requestLoggerMiddleware);
 app.use(express_1.default.static('static'));
-let pluginType;
-if (runConfig.usePlugin === 'PassThru') {
-    pluginType = types_1.PluginType.PassThru;
-}
-else if (runConfig.usePlugin === 'QueueApi') {
-    pluginType = types_1.PluginType.QueueApi;
-}
-else {
-    pluginType = types_1.PluginType.CCSystem;
-}
 let dataLogger = undefined;
 if (runConfig.mongodb.length > 1) {
     dataLogger = new dataLogger_1.DataLogger(logger);
@@ -118,55 +103,27 @@ setTimeout(() => {
 }, 10000);
 const fsapi = new freeswitch_api_controller_1.freeswitchApiController(logger);
 app.use(fsapi.Routes);
-if (pluginType === types_1.PluginType.PassThru) {
-    callMaker.Notifier = statusNofier;
-    const passThruController = new teams_passthru_controller_1.TeamsPassThruController(logger, statusNofier);
-    app.use(passThruController.Routes);
-    passThruCallManager_1.PassThruCallManager.CreateAsync(runConfig, logger, statusNofier, runConfig.teamsAdapterUrl, dataLogger).then(callController => {
-        if (dataLogger) {
+callMaker.Notifier = statusNofier;
+CCSystemManager_1.CCSystemManager.CreateAsync(runConfig, logger, statusNofier, dataLogger).then(callController => {
+    setTimeout(() => {
+        const cnew = new cc_system_controller_1.CcSystemController(logger, statusNofier, RunConfig_1.RunConfig.getInstance().systemChange);
+        cnew.initRestApi().then(() => {
             logger.log('info', {
-                message: 'Register stats controller'
+                message: 'init statsCallbackcontroller',
+                token: CCSystemManager_1.CCSystemManager.token
             });
-            const statsCallbackcontroller = new stats_callback_controller_1.default(logger, dataLogger, callController);
-            app.use(statsCallbackcontroller.Routes);
-        }
-    });
-}
-if (pluginType === types_1.PluginType.QueueApi) {
-    callMaker.Notifier = statusNofier;
-    const ccCallbackController = new teams_cc_callback_controller_1.TeamsCcCallbackController(logger, statusNofier, runConfig.subscriptionId);
-    app.use(ccCallbackController.Routes);
-    queueCallManager_1.QueueCallManager.CreateAsync(runConfig, logger, statusNofier, runConfig.teamsAdapterUrl, dataLogger).then(callController => {
-        if (dataLogger) {
-            const statsCallbackcontroller = new stats_callback_controller_1.default(logger, dataLogger, callController);
-            app.use(statsCallbackcontroller.Routes);
-        }
-    });
-}
-if (pluginType === types_1.PluginType.CCSystem) {
-    callMaker.Notifier = statusNofier;
-    CCSystemManager_1.CCSystemManager.CreateAsync(runConfig, logger, statusNofier, runConfig.ccSystem, dataLogger).then(callController => {
-        setTimeout(() => {
-            const cnew = new cc_system_controller_1.CcSystemController(logger, statusNofier, runConfig.ccSystem, CCSystemManager_1.CCSystemManager.token);
-            cnew.initRestApi().then(() => {
+            if (dataLogger) {
                 logger.log('info', {
-                    message: 'init statsCallbackcontroller',
+                    message: 'init statsCallbackcontroller dataLogger',
                     token: CCSystemManager_1.CCSystemManager.token
                 });
-                if (dataLogger) {
-                    logger.log('info', {
-                        message: 'init statsCallbackcontroller dataLogger',
-                        token: CCSystemManager_1.CCSystemManager.token
-                    });
-                    const statsCallbackcontroller = new stats_callback_controller_1.default(logger, dataLogger, callController);
-                    statsCallbackcontroller.Token = CCSystemManager_1.CCSystemManager.token;
-                    systemConfigController.Token = CCSystemManager_1.CCSystemManager.token;
-                    app.use(statsCallbackcontroller.Routes);
-                }
-            });
-        }, 4000);
-    });
-}
+                const statsCallbackcontroller = new stats_callback_controller_1.default(logger, dataLogger, callController);
+                statsCallbackcontroller.Token = CCSystemManager_1.CCSystemManager.token;
+                app.use(statsCallbackcontroller.Routes);
+            }
+        });
+    }, 4000);
+});
 const httpServer = http_1.createServer(app);
 const io = new socket_io_1.Server(httpServer, {
     pingInterval: 10000,
