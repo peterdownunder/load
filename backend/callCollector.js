@@ -41,6 +41,7 @@ class CallCollector {
         this.ScenarioId = "";
         this.AnnounceError = 0;
         this.Index = 0;
+        this.CallId = '';
         this.CallIndex = 0;
         this.Caller = callerId;
         this.logger.info('create collector add MakeCall event', {
@@ -64,6 +65,7 @@ class CallCollector {
     OnCallArrival(newCall) {
         this.logger.info('add CallArrival event');
         this.Index = this.Index + 1;
+        this.CallId = newCall.callId;
         this.EventLog.push({
             Index: this.Index,
             Event: "CallArrival",
@@ -117,6 +119,7 @@ class CallCollector {
     logStats() {
         return {
             runId: this.RunId,
+            callId: this.CallId,
             callIndex: this.CallIndex,
             scenarioId: this.ScenarioId,
             caller: this.Caller,

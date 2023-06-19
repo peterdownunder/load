@@ -20,6 +20,6 @@
         "freeswitchEslIp": "10.213.6.136",
         "freeswitchEslPassword": "ClueCon",
         "logToConsole": true,
-        "logRoot": "/var/log/"
+        "logRoot": "c:\\users\\public\\telephony\\"
     }
 }

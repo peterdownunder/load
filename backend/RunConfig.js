@@ -52,12 +52,18 @@ class RunConfig {
         if (!this.si) {
             return;
         }
-        let creds = await node_fetch_1.default(`${this.si.ccSystem.clientWebUrl}/api/v1/authentication/signout`, {
-            method: 'PUT',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-        });
+        try {
+            let creds = await node_fetch_1.default(`${this.si.ccSystem.clientWebUrl}/api/v1/authentication/signout`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+            });
+        }
+        catch (e) {
+            console.log('Error logging out');
+            console.log(e);
+        }
         const c = {
             ccSystem: this.si.ccSystem,
             token: ''
@@ -66,16 +72,23 @@ class RunConfig {
         return c;
     }
     async setServer(server) {
-        let creds = await node_fetch_1.default(`${server.clientWebUrl}/api/v1/Authentication/credentials`, {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json',
-                'username': server.userName,
-                'password': server.password
-            },
-        });
-        const loginState = await creds.json();
-        const token = `Bearer ${loginState.token}`;
+        let token = '';
+        try {
+            let creds = await node_fetch_1.default(`${server.clientWebUrl}/api/v1/Authentication/credentials`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'username': server.userName,
+                    'password': server.password
+                },
+            });
+            const loginState = await creds.json();
+            token = `Bearer ${loginState.token}`;
+        }
+        catch (e) {
+            console.log('Error logging in');
+            console.log(e);
+        }
         const c = {
             ccSystem: server,
             token: token
