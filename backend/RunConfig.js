@@ -74,7 +74,7 @@ class RunConfig {
     async setServer(server) {
         let token = '';
         try {
-            let creds = await node_fetch_1.default(`${server.clientWebUrl}/api/v1/Authentication/credentials`, {
+            let creds = await node_fetch_1.default(`${server.clientWebUrl}/touchpoint/api/v1/Authentication/credentials`, {
                 method: 'GET',
                 headers: {
                     'Content-Type': 'application/json',
