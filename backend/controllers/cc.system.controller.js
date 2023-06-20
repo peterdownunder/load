@@ -294,19 +294,20 @@ class CcSystemController {
         this.queueList.length = 0;
     }
     async initialiseSignalR(server) {
+        this.logger.info('initialiseSignalR');
         const queuesMonitor = [];
         this.queueList.map(q => {
             queuesMonitor.push(q.config.id);
         });
         await this.subscribeForInteractions(server, queuesMonitor);
         this.hubQueueUpdate = new signalr_1.HubConnectionBuilder()
-            .withUrl(`${server.ccSystem.clientWebUrl}/queuesHub`, {
+            .withUrl(`${server.ccSystem.clientWebUrl}/touchpoint/hub/queuesHub`, {
             accessTokenFactory: () => server.token.substr(7)
         })
             .configureLogging(signalr_1.LogLevel.Information)
             .build();
         this.hubInteractions = new signalr_1.HubConnectionBuilder()
-            .withUrl(`${server.ccSystem.clientWebUrl}/interactionsHub`, {
+            .withUrl(`${server.ccSystem.clientWebUrl}/touchpoint/hub/interactionsHub`, {
             accessTokenFactory: () => server.token.substr(7)
         })
             .configureLogging(signalr_1.LogLevel.Information)

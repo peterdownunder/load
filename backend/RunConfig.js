@@ -22,11 +22,18 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.RunConfig = void 0;
+exports.RunConfig = exports.ccSystemError = void 0;
 const os = __importStar(require("os"));
 const config = __importStar(require("./runConfiguration.json"));
 const node_fetch_1 = __importDefault(require("node-fetch"));
 const rxjs_1 = require("rxjs");
+class ccSystemError {
+    constructor(errorNumber) {
+        this.status = 0;
+        this.status = errorNumber;
+    }
+}
+exports.ccSystemError = ccSystemError;
 class RunConfig {
     constructor() {
         this.systemChange = new rxjs_1.Subject();
@@ -73,21 +80,23 @@ class RunConfig {
     }
     async setServer(server) {
         let token = '';
-        try {
-            let creds = await node_fetch_1.default(`${server.clientWebUrl}/touchpoint/api/v1/Authentication/credentials`, {
-                method: 'GET',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'username': server.userName,
-                    'password': server.password
-                },
-            });
-            const loginState = await creds.json();
+        let response = await node_fetch_1.default(`${server.clientWebUrl}/api/v1/Authentication/credentials/false`, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'username': server.userName,
+                'password': server.password
+            },
+        });
+        console.log(`login using ${server.userName}`);
+        if (response.ok) {
+            const loginState = await response.json();
+            console.log(`logging in  result ${loginState}`);
             token = `Bearer ${loginState.token}`;
         }
-        catch (e) {
-            console.log('Error logging in');
-            console.log(e);
+        else {
+            console.log(`logging in failed ${response.status}`);
+            throw new ccSystemError(response.status);
         }
         const c = {
             ccSystem: server,

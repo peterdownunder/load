@@ -46,9 +46,15 @@ class StatsConfigController {
             this.logger.info({
                 request: req.body
             });
-            const sys = await RunConfig_1.RunConfig.getInstance().setServer(req.body);
-            resp.json(sys);
-            resp.status(200);
+            try {
+                const sys = await RunConfig_1.RunConfig.getInstance().setServer(req.body);
+                resp.json(sys);
+                resp.status(200);
+            }
+            catch (e) {
+                console.error('failed to ss');
+                resp.status(e.status);
+            }
             resp.end();
         });
         this.Routes.get('/api/v1/systems', (req, resp, next) => {
