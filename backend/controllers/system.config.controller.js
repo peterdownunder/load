@@ -52,7 +52,7 @@ class StatsConfigController {
                 resp.status(200);
             }
             catch (e) {
-                console.error('failed to ss');
+                console.dir(e);
                 resp.status(e.status);
             }
             resp.end();

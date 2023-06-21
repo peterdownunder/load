@@ -80,30 +80,37 @@ class RunConfig {
     }
     async setServer(server) {
         let token = '';
-        let response = await node_fetch_1.default(`${server.clientWebUrl}/api/v1/Authentication/credentials/false`, {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json',
-                'username': server.userName,
-                'password': server.password
-            },
-        });
-        console.log(`login using ${server.userName}`);
-        if (response.ok) {
-            const loginState = await response.json();
-            console.log(`logging in  result ${loginState}`);
-            token = `Bearer ${loginState.token}`;
+        try {
+            let response = await node_fetch_1.default(`${server.clientWebUrl}/api/v1/Authentication/credentials/false`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'username': server.userName,
+                    'password': server.password
+                },
+            });
+            console.log(`login using ${server.userName}`);
+            if (response.ok) {
+                const loginState = await response.json();
+                console.log(`logging in  result ${loginState}`);
+                token = `Bearer ${loginState.token}`;
+            }
+            else {
+                console.log(`logging in failed ${response.status}`);
+                return new ccSystemError(response.status);
+            }
+            const c = {
+                ccSystem: server,
+                token: token
+            };
+            this.systemChange.next(c);
+            return c;
         }
-        else {
-            console.log(`logging in failed ${response.status}`);
-            throw new ccSystemError(response.status);
+        catch (e) {
+            console.log('error posting to server');
+            console.dir(e);
+            return new ccSystemError(500);
         }
-        const c = {
-            ccSystem: server,
-            token: token
-        };
-        this.systemChange.next(c);
-        return c;
     }
     loadConfig() {
         const host = os.hostname().toLowerCase();

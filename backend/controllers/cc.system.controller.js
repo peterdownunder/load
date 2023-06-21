@@ -130,6 +130,7 @@ var DeliveryType;
 var InteractionsHubMethod;
 (function (InteractionsHubMethod) {
     InteractionsHubMethod["activeInteractionChanged"] = "changed";
+    InteractionsHubMethod["activeInteractionsChanged"] = "interactionschanged";
     InteractionsHubMethod["activeInteractionRemoved"] = "removed";
     InteractionsHubMethod["mediaCapabilitiesChanged"] = "mediaCapabilitiesChanged";
     InteractionsHubMethod["lastDialFailed"] = "lastDialFailed";
@@ -140,6 +141,7 @@ var QueueHubMethods;
 (function (QueueHubMethods) {
     QueueHubMethods["QueueAdd"] = "queueAdd";
     QueueHubMethods["QueueUpdate"] = "queueUpdate";
+    QueueHubMethods["QueuesUpdate"] = "queuesUpdate";
     QueueHubMethods["QueueAlerts"] = "queueAlerts";
     QueueHubMethods["TotalingQueueAdd"] = "totalingQueueAdd";
     QueueHubMethods["SecurityUpdate"] = "securityUpdate";
@@ -347,82 +349,15 @@ class CcSystemController {
             message: 'registerInteractionHubEvents'
         });
         this.hubInteractions?.on(InteractionsHubMethod.activeInteractionChanged, (data) => {
-            const callId = +data.id;
-            if (this.callList.find(id => callId === id)) // using the native call reference number (no interactionId supplied by clientwebserver) so if we know about this call
-             {
-                this.logger.info('info', {
-                    signalrTopic: 'InteractionsHubMethod.activeInteractionChanged existing Call',
-                    event: {
-                        id: data.id,
-                        queue: data.queueName,
-                        queueId: data.queueId,
-                        state: data.state
-                    }
-                });
-                if (data.state === InteractionState.idle) {
-                    const i = this.callList.findIndex(c => callId === c);
-                    if (i !== -1) {
-                        this.callList.splice(i, 1);
-                        this.logger.info('interaction', {
-                            action: 'idle',
-                            totalCalls: this.callList.length
-                        });
-                    }
-                    else {
-                        this.logger.info('interaction', {
-                            action: 'idle unknown',
-                            totalCalls: this.callList.length
-                        });
-                    }
-                    this.notifier.CallTerminated.next(new types_1.CallTerminatedArgs(data.id));
-                }
-                else {
-                }
-            }
-            else { // we have never seen this caLL
-                if (data.state !== InteractionState.idle) { // if it is an idle don't create the call as the CWS does not send call complete, so a phontom would be created
-                    this.callList.push(callId); // local cache of active calls for linking
-                    this.logger.info('info', {
-                        signalrTopic: 'InteractionsHubMethod.activeInteractionChanged new Call',
-                        alldata: data,
-                        event: {
-                            id: data.id,
-                            queue: data.queueName,
-                            queueId: data.queueId,
-                            state: data.state,
-                            currentCalls: this.callList.length
-                        }
-                    });
-                    const c = data.parties.find(party => party.type === InteractionPartyType.original);
-                    const callerId = c?.address?.replace(/[^0-9+]/g, ''); // strip the tapi formatting
-                    if (callerId) { // no point if caller is missing
-                        this.notifier.NewCallEvent.next({
-                            callId: data.id,
-                            callerId: callerId ?? '',
-                            conversationId: '',
-                            hrefAnswer: undefined
-                        });
-                    }
-                    else {
-                        this.logger.error('cannot resolve call no caller');
-                    }
-                    this.logger.info('interaction', {
-                        action: `not idle ${data.state}`,
-                        totalCalls: this.callList.length
-                    });
-                }
-                else { // should never happen but no point in creating call on idle as noted above
-                    this.logger.error('info', {
-                        signalrTopic: 'InteractionsHubMethod.activeInteractionChanged ignore event',
-                        event: {
-                            id: data.id,
-                            queue: data.queueName,
-                            queueId: data.queueId,
-                            state: data.state
-                        }
-                    });
-                }
-            }
+            this.processInteractionUpdate(data);
+        });
+        this.hubInteractions?.on(InteractionsHubMethod.activeInteractionsChanged, (interactions) => {
+            interactions.map(data => {
+                this.processInteractionUpdate(data);
+            });
+        });
+        this.hubInteractions?.on(InteractionsHubMethod.activeInteractionChanged, (data) => {
+            this.processInteractionUpdate(data);
         });
         this.hubInteractions?.on(InteractionsHubMethod.activeInteractionRemoved, (data) => {
             this.logger.info('info', {
@@ -451,6 +386,14 @@ class CcSystemController {
             else {
             }
         });
+        this.hubQueueUpdate?.on(QueueHubMethods.QueuesUpdate, (queues) => {
+            queues.map(data => {
+                this.logger.info('info', {
+                    signalrTopic: 'QueueHubMethods.QueueUpdate',
+                    callsWaiting: data.stats.numberOfCallsInQueue
+                });
+            });
+        });
         this.hubQueueUpdate?.on(QueueHubMethods.TotalingQueueAdd, (data) => {
             this.logger.info('info', {
                 signalrTopic: 'QueueHubMethods.TotalingQueueAdd',
@@ -464,6 +407,84 @@ class CcSystemController {
                 event: queues
             });
         });
+    }
+    processInteractionUpdate(data) {
+        const callId = +data.id;
+        if (this.callList.find(id => callId === id)) // using the native call reference number (no interactionId supplied by clientwebserver) so if we know about this call
+         {
+            this.logger.info('info', {
+                signalrTopic: 'InteractionsHubMethod.activeInteractionChanged existing Call',
+                event: {
+                    id: data.id,
+                    queue: data.queueName,
+                    queueId: data.queueId,
+                    state: data.state
+                }
+            });
+            if (data.state === InteractionState.idle) {
+                const i = this.callList.findIndex(c => callId === c);
+                if (i !== -1) {
+                    this.callList.splice(i, 1);
+                    this.logger.info('interaction', {
+                        action: 'idle',
+                        totalCalls: this.callList.length
+                    });
+                }
+                else {
+                    this.logger.info('interaction', {
+                        action: 'idle unknown',
+                        totalCalls: this.callList.length
+                    });
+                }
+                this.notifier.CallTerminated.next(new types_1.CallTerminatedArgs(data.id));
+            }
+            else {
+            }
+        }
+        else { // we have never seen this caLL
+            if (data.state !== InteractionState.idle) { // if it is an idle don't create the call as the CWS does not send call complete, so a phontom would be created
+                this.callList.push(callId); // local cache of active calls for linking
+                this.logger.info('info', {
+                    signalrTopic: 'InteractionsHubMethod.activeInteractionChanged new Call',
+                    alldata: data,
+                    event: {
+                        id: data.id,
+                        queue: data.queueName,
+                        queueId: data.queueId,
+                        state: data.state,
+                        currentCalls: this.callList.length
+                    }
+                });
+                const c = data.parties.find(party => party.type === InteractionPartyType.original);
+                const callerId = c?.address?.replace(/[^0-9+]/g, ''); // strip the tapi formatting
+                if (callerId) { // no point if caller is missing
+                    this.notifier.NewCallEvent.next({
+                        callId: data.id,
+                        callerId: callerId ?? '',
+                        conversationId: '',
+                        hrefAnswer: undefined
+                    });
+                }
+                else {
+                    this.logger.error('cannot resolve call no caller');
+                }
+                this.logger.info('interaction', {
+                    action: `not idle ${data.state}`,
+                    totalCalls: this.callList.length
+                });
+            }
+            else { // should never happen but no point in creating call on idle as noted above
+                this.logger.error('info', {
+                    signalrTopic: 'InteractionsHubMethod.activeInteractionChanged ignore event',
+                    event: {
+                        id: data.id,
+                        queue: data.queueName,
+                        queueId: data.queueId,
+                        state: data.state
+                    }
+                });
+            }
+        }
     }
     async subscribeForInteractions(server, queueIds) {
         const request = new QueuedInteractionsRequest(queueIds);
